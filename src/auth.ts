@@ -1,6 +1,7 @@
 import NextAuth from 'next-auth'
 import Google from 'next-auth/providers/google'
 import { createServiceClient } from '@/lib/supabase/server'
+import type { EmployeeRole } from '@/types/next-auth'
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
@@ -29,16 +30,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const supabase = createServiceClient()
         const { data: emp } = await supabase
           .from('employees')
-          .select('id, company_id, full_name, role, section_id, department_id')
+          .select('id, company_id, year_id, team_id, full_name, role')
           .eq('email', user.email)
           .single()
         if (emp) {
           token.employeeId = emp.id
           token.companyId = emp.company_id
+          token.yearId = emp.year_id
+          token.teamId = emp.team_id ?? null
           token.fullName = emp.full_name
-          token.role = emp.role
-          token.sectionId = emp.section_id
-          token.departmentId = emp.department_id
+          token.role = emp.role as EmployeeRole
         }
       }
       return token
@@ -46,10 +47,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async session({ session, token }) {
       session.user.employeeId = token.employeeId as string
       session.user.companyId = token.companyId as string
+      session.user.yearId = token.yearId as string
+      session.user.teamId = (token.teamId as string | null | undefined) ?? null
       session.user.fullName = token.fullName as string
-      session.user.role = token.role as string
-      session.user.sectionId = token.sectionId as string
-      session.user.departmentId = token.departmentId as string
+      session.user.role = token.role as EmployeeRole
       return session
     },
   },

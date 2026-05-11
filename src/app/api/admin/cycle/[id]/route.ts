@@ -9,12 +9,12 @@ export async function PUT(
   const { id } = await ctx.params
   const session = await auth()
   if (!session) return Response.json({ error: 'unauthorized' }, { status: 401 })
-  if (session.user.role !== 'super_admin') return Response.json({ error: 'forbidden' }, { status: 403 })
+  if (session.user.role !== 'super_commander') return Response.json({ error: 'forbidden' }, { status: 403 })
 
   const body = await request.json().catch(() => null)
   if (!body) return Response.json({ error: 'invalid body' }, { status: 400 })
 
-  const allowed = ['is_active', 'results_visible', 'name', 'min_evaluators_to_reveal', 'min_cross_dept']
+  const allowed = ['is_active', 'name']
   const updates: Record<string, unknown> = {}
   for (const key of allowed) {
     if (key in body) updates[key] = body[key]

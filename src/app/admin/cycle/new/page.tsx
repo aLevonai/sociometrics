@@ -11,7 +11,7 @@ export default async function NewCyclePage() {
   const t = await getTranslations('admin')
   const tc = await getTranslations('common')
 
-  if (session.user.role !== 'super_admin') {
+  if (session.user.role !== 'super_commander') {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <p className="text-gray-500">{tc('unauthorized')}</p>

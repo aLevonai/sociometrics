@@ -8,8 +8,6 @@ export default function NewCycleForm() {
   const t = useTranslations('admin')
   const router = useRouter()
   const [name, setName] = useState('')
-  const [minEvaluators, setMinEvaluators] = useState(3)
-  const [minCrossDept, setMinCrossDept] = useState(10)
   const [status, setStatus] = useState<'idle' | 'creating' | 'error'>('idle')
   const [error, setError] = useState('')
 
@@ -21,11 +19,7 @@ export default function NewCycleForm() {
     const res = await fetch('/api/admin/cycle', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        name: name.trim(),
-        min_evaluators_to_reveal: minEvaluators,
-        min_cross_dept: minCrossDept,
-      }),
+      body: JSON.stringify({ name: name.trim() }),
     })
 
     const data = await res.json().catch(() => ({}))
@@ -45,34 +39,14 @@ export default function NewCycleForm() {
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
+          placeholder="למשל: סוציומטריה קיץ 2026"
           className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           required
         />
       </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          {t('minEvaluators')}
-        </label>
-        <input
-          type="number"
-          min={1}
-          value={minEvaluators}
-          onChange={(e) => setMinEvaluators(Number(e.target.value))}
-          className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          {t('minCrossDept')}
-        </label>
-        <input
-          type="number"
-          min={0}
-          value={minCrossDept}
-          onChange={(e) => setMinCrossDept(Number(e.target.value))}
-          className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
-      </div>
+      <p className="text-xs text-gray-400">
+        לאחר יצירת המחזור תוכל להגדיר שאלות וסף חשיפה לכל סוג הערכה בנפרד.
+      </p>
       {error && <p className="text-red-500 text-sm">{error}</p>}
       <button
         type="submit"

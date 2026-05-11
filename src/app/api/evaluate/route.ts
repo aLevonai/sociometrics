@@ -8,6 +8,10 @@ type EvalResponse = {
   text_value: string | null
 }
 
+const VALID_EVAL_TYPES = new Set([
+  'peer_company', 'peer_cross_year', 'team_leader', 'cmd_by_soldiers', 'cmd_by_teamleaders',
+])
+
 export async function POST(request: NextRequest) {
   const session = await auth()
   if (!session) return Response.json({ error: 'unauthorized' }, { status: 401 })
@@ -17,15 +21,20 @@ export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => null)
   if (!body) return Response.json({ error: 'invalid body' }, { status: 400 })
 
-  const { cycle_id, evaluatee_id, responses, existing_eval_id } = body as {
+  const { cycle_id, evaluatee_id, eval_type, responses, existing_eval_id } = body as {
     cycle_id: string
     evaluatee_id: string
+    eval_type: string
     responses: EvalResponse[]
     existing_eval_id: string | null
   }
 
-  if (!cycle_id || !evaluatee_id || !Array.isArray(responses)) {
+  if (!cycle_id || !evaluatee_id || !eval_type || !Array.isArray(responses)) {
     return Response.json({ error: 'missing fields' }, { status: 400 })
+  }
+
+  if (!VALID_EVAL_TYPES.has(eval_type)) {
+    return Response.json({ error: 'invalid eval_type' }, { status: 400 })
   }
 
   if (evaluatee_id === myId) {
@@ -33,20 +42,6 @@ export async function POST(request: NextRequest) {
   }
 
   const supabase = createServiceClient()
-
-  const { data: targetEmployee } = await supabase
-    .from('employees')
-    .select('section_id')
-    .eq('id', evaluatee_id)
-    .single()
-
-  if (!targetEmployee) {
-    return Response.json({ error: 'employee not found' }, { status: 404 })
-  }
-
-  if (session.user.sectionId !== targetEmployee.section_id) {
-    return Response.json({ error: 'different section' }, { status: 403 })
-  }
 
   const { data: cycle } = await supabase
     .from('evaluation_cycles')
@@ -60,6 +55,7 @@ export async function POST(request: NextRequest) {
   }
 
   let evalId = existing_eval_id
+
   if (!evalId) {
     const { data: newEval, error: evalError } = await supabase
       .from('evaluations')
@@ -67,6 +63,7 @@ export async function POST(request: NextRequest) {
         cycle_id,
         evaluator_id: myId,
         evaluatee_id,
+        eval_type,
         is_submitted: false,
       })
       .select('id')
@@ -79,6 +76,7 @@ export async function POST(request: NextRequest) {
         .eq('cycle_id', cycle_id)
         .eq('evaluator_id', myId)
         .eq('evaluatee_id', evaluatee_id)
+        .eq('eval_type', eval_type)
         .single()
 
       if (!existingEval) return Response.json({ error: evalError.message }, { status: 500 })

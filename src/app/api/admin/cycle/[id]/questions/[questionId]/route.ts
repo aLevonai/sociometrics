@@ -9,7 +9,7 @@ export async function DELETE(
   const { questionId } = await ctx.params
   const session = await auth()
   if (!session) return Response.json({ error: 'unauthorized' }, { status: 401 })
-  if (session.user.role !== 'super_admin') return Response.json({ error: 'forbidden' }, { status: 403 })
+  if (session.user.role !== 'super_commander') return Response.json({ error: 'forbidden' }, { status: 403 })
 
   const supabase = createServiceClient()
   const { error } = await supabase
